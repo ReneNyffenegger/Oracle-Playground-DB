@@ -1,2 +1,1 @@
-# Oracle-playground-DB
-Oracle playground
+# Oracle Playground Database

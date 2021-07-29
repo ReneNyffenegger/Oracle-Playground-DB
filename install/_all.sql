@@ -2,11 +2,12 @@ connect / as sysdba
 
 drop user usr_01          cascade;
 drop user org_data        cascade;
-drop role org_data_admin;
+drop role rol_org_data_admin;
 
 create user usr_01   identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
 create user org_data identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
-create role org_data_admin;
+
+create role rol_org_data_admin;
 
 
 grant
@@ -113,7 +114,12 @@ begin
 end;
 /
 
-grant execute on usr_interface to usr_01;
+
+connect / as sysdba
+
+grant execute on org_data.usr_interface to rol_org_data_admin;
+grant rol_org_data_admin to usr_01;
+
 
 connect usr_01/secretGarden
 

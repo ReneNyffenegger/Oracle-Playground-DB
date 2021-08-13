@@ -2,13 +2,19 @@ connect / as sysdba
 
 drop user usr_01          cascade;
 drop user org_data        cascade;
+drop user the_dba         cascade;
 drop role rol_org_data_admin;
+
+create user the_dba  identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
+
+grant dba to the_dba;
+
+connect the_dba/secretGarden
 
 create user usr_01   identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
 create user org_data identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
 
 create role rol_org_data_admin;
-
 
 grant
    create session,
@@ -18,7 +24,14 @@ grant
 to
    org_data;
 
+--
+-- the_dba cannot grant execute on dbms_random
+--
+connect / as sysdba
 grant execute on dbms_random to org_data;
+connect the_dba/secretGarden
+
+--
 
 grant
    create session

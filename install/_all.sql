@@ -3,7 +3,10 @@ connect / as sysdba
 drop user usr_01          cascade;
 drop user org_data        cascade;
 drop user the_dba         cascade;
-drop role rol_org_data_admin;
+
+
+drop role    rol_org_data_admin;
+drop context ctx_org_data;
 
 create user the_dba  identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
 
@@ -17,10 +20,11 @@ create user org_data identified by secretGarden default tablespace data temporar
 create role rol_org_data_admin;
 
 grant
-   create session,
-   create table,
-   create procedure,
-   create sequence
+   create any context,
+   create     procedure,
+   create     sequence,
+   create     session,
+   create     table 
 to
    org_data;
 
@@ -53,7 +57,7 @@ create table tab_p (
 
 create table tab_c (
    id_p                not null,
-   val_1  varchar2(10) not null,
+   val_1  varchar2(2)  not null check (val_1 in ('A', 'B', 'C', 'AA', 'BB', 'CC')),
    val_2  number       not null,
    --
    constraint tab_c_fk foreign key (id_p) references tab_p
@@ -94,10 +98,11 @@ end modif_tab;
 /
 
 
+prompt call madif_tab.insert_c
 begin
-   modif_tab.insert_c('four' , 'A',  5.1);
-   modif_tab.insert_c('seven', 'B', 24.7);
-   modif_tab.insert_c('five' , 'C',  8.2);
+   modif_tab.insert_c('four' , 'AA',  5.1);
+   modif_tab.insert_c('seven', 'BB', 24.7);
+   modif_tab.insert_c('five' , 'CC',  8.2);
 end;
 /
 
@@ -113,12 +118,16 @@ create package body usr_interface as
       tx_ := dbms_random.string('a', dbms_random.value(1, 20));
       insert into tab_p (tx, nm) values (tx_, trunc(dbms_random.value(0, 1000),2));
 
-      modif_tab.insert_c(tx_, dbms_random.string('x', dbms_random.value(1,10)), trunc(dbms_random.value(1, 100000), 30));
+      modif_tab.insert_c(
+         tx_,
+         chr(dbms_random.value(65, 68)),
+         trunc(dbms_random.value(1, 100000), 30));
 
    end insert_random_data;
 end;
 /
 
+prompt call usr_interface.insert_random_data
 begin
    dbms_random.seed(1);
    usr_interface.insert_random_data;
@@ -127,6 +136,25 @@ begin
 end;
 /
 
+create context ctx_org_data using org_data.ctx_pkg;
+
+create package ctx_pkg as
+
+    procedure set_value(value in varchar2);
+
+end ctx_pkg;
+/
+
+
+create package body ctx_pkg as
+
+    procedure set_value(value in varchar2) is
+    begin
+        dbms_session.set_context('ctx_org_data', 'attr', value);
+    end set_value;
+
+end ctx_pkg;
+/
 
 connect / as sysdba
 
@@ -150,6 +178,8 @@ end;
 /
 
 connect org_data/secretGarden
+
+grant execute on org_data.ctx_pkg to usr_01;
 
 select * from org_data.tab_c;
 select * from org_data.tab_p;

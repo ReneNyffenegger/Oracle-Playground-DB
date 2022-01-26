@@ -1,5 +1,6 @@
 connect / as sysdba
 
+drop user usr_02          cascade;
 drop user usr_01          cascade;
 drop user org_data        cascade;
 drop user the_dba         cascade;
@@ -15,6 +16,7 @@ grant dba to the_dba;
 connect the_dba/secretGarden
 
 create user usr_01   identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
+create user usr_02   identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
 create user org_data identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
 
 create role rol_org_data_admin;
@@ -42,6 +44,12 @@ grant
 to
    usr_01;
 
+grant
+   create session,
+   create table,
+   create procedure
+to
+   usr_02;
 
 connect org_data/secretGarden
 
@@ -161,25 +169,26 @@ connect / as sysdba
 grant execute on org_data.usr_interface to rol_org_data_admin;
 grant rol_org_data_admin to usr_01;
 
+connect usr_02/secretGarden
 
-connect usr_01/secretGarden
+create or replace package package_with_errors as
 
--- ORA-00942: table or view does not exist
---
--- select * from org_data.tab_c;
--- select * from org_data.tab_p;
+    procedure do_something;
 
-begin
-   dbms_random.seed(2);
-   org_data.usr_interface.insert_random_data;
-   org_data.usr_interface.insert_random_data;
-   org_data.usr_interface.insert_random_data;
-end;
+end package_with_errors;
 /
 
-connect org_data/secretGarden
+create or replace package body package_with_errors as
 
-grant execute on org_data.ctx_pkg to usr_01;
+    procedure do_something is
+       max_num number;
+    begin
 
-select * from org_data.tab_c;
-select * from org_data.tab_p;
+       select max(num) into max_num from inexisting_table;
+       dbms_output.put_line('max num is ' || max_num);
+
+    end do_something;
+end package_with_errors;
+/
+
+show errors

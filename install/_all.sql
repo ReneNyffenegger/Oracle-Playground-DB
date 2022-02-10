@@ -77,7 +77,9 @@ insert into tab_p (tx, nm) values ('four' , 4);
 insert into tab_p (tx, nm) values ('seven', 7);
 insert into tab_p (tx, nm) values ('eight', 8);
 
-create package modif_tab as
+create package modif_tab
+    authid definer
+as
 
     procedure insert_c (tx_ varchar2, val_1_ varchar2, val_2_ number);
 
@@ -114,7 +116,9 @@ begin
 end;
 /
 
-create package usr_interface as
+create package usr_interface
+   authid definer
+as
    procedure insert_random_data;
 end;
 /
@@ -146,9 +150,11 @@ end;
 
 create context ctx_org_data using org_data.ctx_pkg;
 
-create package ctx_pkg as
+create package ctx_pkg
+    authid definer
+as
 
-    procedure set_value(value in varchar2);
+    procedure set_value(val in varchar2);
 
 end ctx_pkg;
 /
@@ -156,9 +162,9 @@ end ctx_pkg;
 
 create package body ctx_pkg as
 
-    procedure set_value(value in varchar2) is
+    procedure set_value(val in varchar2) is
     begin
-        dbms_session.set_context('ctx_org_data', 'attr', value);
+        dbms_session.set_context('ctx_org_data', 'attr', val);
     end set_value;
 
 end ctx_pkg;
@@ -171,7 +177,9 @@ grant rol_org_data_admin to usr_01;
 
 connect usr_02/secretGarden
 
-create or replace package package_with_errors as
+create or replace package package_with_errors
+    authid definer
+as
 
     procedure do_something;
 

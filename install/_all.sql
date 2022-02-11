@@ -6,6 +6,7 @@ drop user org_data        cascade;
 drop user the_dba         cascade;
 
 
+drop role    rol_dev;
 drop role    rol_org_data_admin;
 drop context ctx_org_data;
 
@@ -19,8 +20,7 @@ create user usr_01   identified by secretGarden default tablespace data temporar
 create user usr_02   identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
 create user org_data identified by secretGarden default tablespace data temporary tablespace temp quota unlimited on data;
 
-create role rol_org_data_admin;
-
+create role rol_dev;
 grant
    create any context,
    create     procedure,
@@ -28,7 +28,12 @@ grant
    create     session,
    create     table 
 to
-   org_data;
+   rol_dev;
+
+grant rol_dev to org_data;
+
+create role rol_org_data_admin;
+
 
 --
 -- the_dba cannot grant execute on dbms_random
@@ -186,6 +191,9 @@ as
 end package_with_errors;
 /
 
+prompt
+prompt Create a paackage body with an error on purpose
+prompt
 create or replace package body package_with_errors as
 
     procedure do_something is
@@ -198,5 +206,6 @@ create or replace package body package_with_errors as
     end do_something;
 end package_with_errors;
 /
-
 show errors
+
+@role-hierarchy

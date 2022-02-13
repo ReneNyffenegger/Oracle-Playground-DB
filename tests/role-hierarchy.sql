@@ -14,4 +14,5 @@ select * from session_privs;
 -- create table t1 (a number);
 
 set role rol_hir_2_1;
+select * from session_roles;
 create table t1 (a number);
